@@ -1,12 +1,15 @@
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 from app.core.config import settings
 
-engine = create_engine(settings.database_url)
+engine = create_engine(
+    settings.database_url,
+    echo=True
+)
 
-
-def test_connection():
-    with engine.connect() as connection:
-        result = connection.execute(text("SELECT version();"))
-
-        print(result.fetchone())
+SessionLocal = sessionmaker(
+    autoflush=False,
+    autocommit=False,
+    bind=engine
+)
