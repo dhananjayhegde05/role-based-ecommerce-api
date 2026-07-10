@@ -19,3 +19,7 @@ class ProductService:
         db.refresh(new_product)
 
         return new_product
+
+    @staticmethod
+    def get_all_products(db: Session):
+        return db.query(Product).all()
