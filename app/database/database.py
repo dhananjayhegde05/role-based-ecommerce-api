@@ -1,8 +1,8 @@
 from sqlalchemy import create_engine, text
 
-DATABASE_URL = "postgresql://dhananjayhegde@localhost:5432/ecommerce_db"
+from app.core.config import settings
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(settings.database_url)
 
 
 def test_connection():
