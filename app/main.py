@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.routers import auth
 
 from app.routers.products import router as products_router
 
@@ -12,3 +13,8 @@ def home():
     }
 
 app.include_router(products_router)
+app.include_router(
+    auth.router,
+    prefix="/auth",
+    tags=["Authentication"],
+)
