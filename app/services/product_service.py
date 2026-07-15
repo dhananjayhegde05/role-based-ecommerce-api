@@ -4,16 +4,22 @@ from sqlalchemy.orm import Session
 
 from app.models.product import Product
 from app.schemas.product import ProductCreate
+from app.models.user import User, UserRole
 
 
 class ProductService:
 
     @staticmethod
-    def create_product(db: Session, product: ProductCreate) -> Product:
+    def create_product(
+            db: Session,
+            product: ProductCreate,
+            current_user: User,
+    ) -> Product:
         new_product = Product(
             name=product.name,
             price=product.price,
             stock=product.stock,
+            owner_id=current_user.id,
         )
 
         db.add(new_product)
@@ -51,36 +57,46 @@ class ProductService:
             db: Session,
             product_id: int,
             product_data: ProductCreate,
+            current_user: User,
     ):
-        # Step 1: Get existing product (raises 404 if not found)
         product = ProductService.get_product_by_id(db, product_id)
 
-        # Step 2: Update the object's attributes
+        if (
+                current_user.role != UserRole.ADMIN
+                and product.owner_id != current_user.id
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail="Not authorized to update this product",
+            )
+
         product.name = product_data.name
         product.price = product_data.price
         product.stock = product_data.stock
 
-        # Step 3: Save changes to the database
         db.commit()
-
-        # Step 4: Reload the updated object
         db.refresh(product)
 
-        # Step 5: Return updated product
         return product
 
     @staticmethod
     def delete_product(
             db: Session,
             product_id: int,
+            current_user: User,
     ):
-        # Step 1: Get the product (raises 404 if not found)
         product = ProductService.get_product_by_id(db, product_id)
 
-        # Step 2: Delete the product
-        db.delete(product)
+        if (
+                current_user.role != UserRole.ADMIN
+                and product.owner_id != current_user.id
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail="Not authorized to delete this product",
+            )
 
-        # Step 3: Commit the transaction
+        db.delete(product)
         db.commit()
 
         return {

@@ -4,6 +4,8 @@ from fastapi import status
 from app.dependencies.database import get_db
 from app.schemas.product import ProductCreate, ProductResponse
 from app.services.product_service import ProductService
+from app.dependencies.roles import require_seller
+from app.models.user import User
 
 router = APIRouter(
     prefix="/products",
@@ -14,9 +16,14 @@ router = APIRouter(
 @router.post("/", response_model=ProductResponse)
 def create_product(
     product: ProductCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_seller),
 ):
-    return ProductService.create_product(db, product)
+    return ProductService.create_product(
+        db,
+        product,
+        current_user,
+    )
 
 @router.get("/", response_model=list[ProductResponse])
 def get_products(
@@ -36,11 +43,13 @@ def update_product(
     product_id: int,
     product: ProductCreate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(require_seller),
 ):
     return ProductService.update_product(
         db,
         product_id,
         product,
+        current_user,
     )
 
 @router.delete(
@@ -50,8 +59,10 @@ def update_product(
 def delete_product(
     product_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(require_seller),
 ):
     return ProductService.delete_product(
         db,
         product_id,
+        current_user,
     )
